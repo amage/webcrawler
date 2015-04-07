@@ -1,0 +1,27 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+defaultTasks 'build'
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+compileJava.options.encoding = 'UTF-8'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    /* parsing */
+    compile 'org.jsoup:jsoup:1.6.3'
+
+    /* logging */
+    compile 'org.slf4j:slf4j-api:1.7.3'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.3'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+
+    /* Test */
+    testCompile 'junit:junit:4.8.2'
+    testCompile 'org.mockito:mockito-all:1.9.5'
+}
