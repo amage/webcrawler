@@ -6,6 +6,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.Map;
 
+import org.playstat.agent.nullagent.NullAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,9 +1,10 @@
-package org.playstat.agent;
+package org.playstat.agent.nullagent;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.playstat.agent.ICookiesStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

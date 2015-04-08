@@ -1,4 +1,4 @@
-package org.playstat.agent;
+package org.playstat.agent.nullagent;
 
 public enum HttpHeaders {
     // Заголовок GH Запрос Ответ Появление* Назначение Пример

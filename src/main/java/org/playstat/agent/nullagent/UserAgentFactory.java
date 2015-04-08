@@ -1,4 +1,4 @@
-package org.playstat.agent;
+package org.playstat.agent.nullagent;
 
 public class UserAgentFactory {
     static public String generateString() {
