@@ -1,5 +1,10 @@
 # Java web crawler micro-framework
 
+## Features
+
+* cache
+* cookie support in default agent
+
 ## How to build
 
 1. checkout last sources
