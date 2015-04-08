@@ -10,7 +10,7 @@ $ ./gradlew
 ```
 
 ## Quick start
-```
+```java
 WebClientAgent web = new WebClientAgent();
 Document doc = web.go("http://google.com");
 ```
