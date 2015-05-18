@@ -2,12 +2,14 @@ package org.playstat.parser;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -41,6 +43,27 @@ public class WebClient {
         return web.getAgent().post(new URL(url), params);
     }
 
+    public InputStream goRaw(String url) throws IOException {
+        this.setBaseUrl(baseUrl);
+        File cacheFolder = new File(CACHE_FOLDER);
+        if (!cacheFolder.exists()) {
+            cacheFolder.mkdirs();
+        }
+        String filename = MD5(url);
+        final String subFolder = filename.substring(0, 2) + File.separator + filename.substring(0, 4);
+        filename = subFolder + File.separator + filename;
+        new File(cacheFolder.getAbsolutePath() + File.separator + subFolder).mkdirs();
+        File pageFile = new File(cacheFolder.getAbsolutePath() + File.separator + filename);
+        try {
+            if (pageFile.exists() && cacheEnable) {
+                return new FileInputStream(pageFile);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        Files.copy(getWebAgent().go(url), pageFile.toPath());
+        return new FileInputStream(pageFile);
+    }
     // TODO: rewrite cleaner
     public Document go(String url, String baseUrl) throws IOException {
         this.setBaseUrl(baseUrl);
