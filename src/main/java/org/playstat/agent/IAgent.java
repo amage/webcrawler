@@ -14,6 +14,10 @@ public interface IAgent {
 
     void addCookie(String host, String name, String value);
 
+    void addHeader(String key, String value);
+
+    void removeHeader(String key);
+
     String getCookie(String host, String name);
 
     InputStream post(URL url, Map<String, String> params) throws IOException;

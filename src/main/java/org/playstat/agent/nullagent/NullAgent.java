@@ -8,6 +8,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +30,8 @@ public class NullAgent implements IAgent {
     private Proxy proxy;
     private String userAgent;
     private String charset;
+
+    private Map<String, String> requestParams = new HashMap<String, String>();
 
     public static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
         @Override
@@ -159,6 +162,10 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Host", "www.yandex.ru");
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
+        for (Entry<String, String> e : requestParams.entrySet()) {
+            con.addRequestProperty(e.getKey(), e.getValue());
+        }
+
     }
 
     private String makeCookieString(String host) {
@@ -287,5 +294,15 @@ public class NullAgent implements IAgent {
     @Override
     public void setCharset(String charset) {
         this.charset = charset;
+    }
+
+    @Override
+    public void addHeader(String key, String value) {
+        requestParams.put(key, value);
+    }
+
+    @Override
+    public void removeHeader(String key) {
+        requestParams.remove(key);
     }
 }
