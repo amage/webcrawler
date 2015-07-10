@@ -16,7 +16,7 @@ $ ./gradlew
 
 ## Quick start
 ```java
-WebClientAgent web = new WebClientAgent();
+WebClient web = new WebClient();
 Document doc = web.go("http://google.com");
 ```
 Document is org.jsoup.nodes.Document JSoup class.
