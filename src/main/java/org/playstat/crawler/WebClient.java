@@ -2,6 +2,7 @@ package org.playstat.crawler;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,14 +21,13 @@ import org.slf4j.LoggerFactory;
 
 public class WebClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private boolean cacheEnable = true;
-    private final String CACHE_FOLDER = System.getProperty("user.home")
-            + File.separator + ".parser" + File.separator + "cache"
-            + File.separator;
+    private final ICache cache = new FileCache();
     private final WebClientAgent web;
+
     private String charsetName = "UTF-8";
     private String baseUrl = "";
     private ICaptchaSolver captchaSolver;
+    private boolean cacheEnable = true;
 
     public WebClient() {
         this.web = new WebClientAgent();
@@ -47,64 +47,48 @@ public class WebClient {
     }
 
     public InputStream goRaw(String url) throws IOException {
-        this.setBaseUrl(baseUrl);
-        File cacheFolder = new File(CACHE_FOLDER);
-        if (!cacheFolder.exists()) {
-            cacheFolder.mkdirs();
-        }
-        String filename = MD5(url);
-        final String subFolder = filename.substring(0, 2) + File.separator
-                + filename.substring(0, 4);
-        filename = subFolder + File.separator + filename;
-        new File(cacheFolder.getAbsolutePath() + File.separator + subFolder)
-                .mkdirs();
-        File pageFile = new File(cacheFolder.getAbsolutePath() + File.separator
-                + filename);
-        try {
-            if (pageFile.exists() && cacheEnable) {
-                return new FileInputStream(pageFile);
+        if (cacheEnable) {
+            File pageFile = cache.getCacheFile(url);
+            try {
+                if (pageFile.exists()) {
+                    return new FileInputStream(pageFile);
+                }
+            } catch (FileNotFoundException e) {
+                logger.error(e.getMessage(), e);
             }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            Files.copy(getWebAgent().go(url), pageFile.toPath());
+            return new FileInputStream(pageFile);
+        } else {
+            return getWebAgent().go(url);
         }
-        Files.copy(getWebAgent().go(url), pageFile.toPath());
-        return new FileInputStream(pageFile);
     }
 
-    // TODO: rewrite cleaner
     public Document go(String url, String baseUrl) throws IOException {
         this.setBaseUrl(baseUrl);
-        File cacheFolder = new File(CACHE_FOLDER);
-        if (!cacheFolder.exists()) {
-            cacheFolder.mkdirs();
-        }
-        String filename = MD5(url);
-        final String subFolder = filename.substring(0, 2) + File.separator
-                + filename.substring(0, 4);
-        filename = subFolder + File.separator + filename;
-        new File(cacheFolder.getAbsolutePath() + File.separator + subFolder)
-                .mkdirs();
-        File pageFile = new File(cacheFolder.getAbsolutePath() + File.separator
-                + filename);
-        Document result = null;
-        try {
-            if (pageFile.exists() && cacheEnable) {
-                result = Jsoup.parse(pageFile, charsetName, baseUrl);
-                return result;
+        final File pageFile = cache.getCacheFile(url);
+        if (cacheEnable) {
+            if (pageFile.exists()) {
+                try {
+                    return Jsoup.parse(pageFile, charsetName, baseUrl);
+                } catch (FileNotFoundException e) {
+                    logger.error(e.getMessage(), e);
+                }
             }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
         }
-        result = Jsoup.parse(getWebAgent().go(url), getCharsetName(), baseUrl);
+        final Document result = Jsoup.parse(getWebAgent().go(url),
+                getCharsetName(), baseUrl);
+
         if (getCaptchaSolver() != null) {
             if (getCaptchaSolver().isCaptchaPage(result)) {
                 getCaptchaSolver().solve(this, result);
                 return go(url, baseUrl);
             }
         }
-        FileOutputStream out = new FileOutputStream(pageFile);
-        out.write(result.html().getBytes(charsetName));
-        out.close();
+        if (cacheEnable) {
+            FileOutputStream out = new FileOutputStream(pageFile);
+            out.write(result.html().getBytes(charsetName));
+            out.close();
+        }
         return result;
     }
 
@@ -123,22 +107,6 @@ public class WebClient {
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
-    }
-
-    private String MD5(String md5) {
-        try {
-            java.security.MessageDigest md = java.security.MessageDigest
-                    .getInstance("MD5");
-            byte[] array = md.digest(md5.getBytes());
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < array.length; ++i) {
-                sb.append(Integer.toHexString((array[i] & 0xFF) | 0x100)
-                        .substring(1, 3));
-            }
-            return sb.toString();
-        } catch (java.security.NoSuchAlgorithmException e) {
-        }
-        return null;
     }
 
     public boolean isCacheEnable() {
