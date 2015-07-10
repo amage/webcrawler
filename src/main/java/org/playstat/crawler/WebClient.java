@@ -29,6 +29,10 @@ public class WebClient {
     private String baseUrl = "";
     private ICaptchaSolver captchaSolver;
 
+    public WebClient() {
+        this.web = new WebClientAgent();
+    }
+
     public WebClient(WebClientAgent web) {
         this.web = web;
     }

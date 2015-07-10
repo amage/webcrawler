@@ -2,9 +2,7 @@ package org.playstat.agent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Proxy;
 import java.net.URL;
-import java.util.Map;
 
 import org.playstat.agent.nullagent.NullAgent;
 import org.slf4j.Logger;
