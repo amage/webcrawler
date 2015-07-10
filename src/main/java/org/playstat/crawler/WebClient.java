@@ -1,4 +1,4 @@
-package org.playstat.parser;
+package org.playstat.crawler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebClient {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private boolean cacheEnable = true;
     private final String CACHE_FOLDER = System.getProperty("user.home")
             + File.separator + ".parser" + File.separator + "cache"
