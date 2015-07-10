@@ -24,29 +24,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NullAgent implements IAgent {
-    private ICookiesStorage cookiesStorage;
-    private String language;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final Map<String, String> requestParams = new HashMap<String, String>();
+    private ICookiesStorage cookiesStorage;
+
+    private String language;
     private Proxy proxy;
     private String userAgent;
     private String charset;
-
-    private Map<String, String> requestParams = new HashMap<String, String>();
-
-    public static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
-        @Override
-        public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-    } };
 
     public NullAgent() {
         setUserAgent(UserAgentFactory.generateString());
@@ -68,9 +54,12 @@ public class NullAgent implements IAgent {
         if (url.getProtocol().equals("https")) {
             try {
                 SSLContext sslContext = SSLContext.getInstance("SSL");
-                sslContext.init(null, NullAgent.TRUST_ALL_CERTS, new java.security.SecureRandom());
-                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-                ((javax.net.ssl.HttpsURLConnection) con).setSSLSocketFactory(sslSocketFactory);
+                sslContext.init(null, NullAgent.TRUST_ALL_CERTS,
+                        new java.security.SecureRandom());
+                final SSLSocketFactory sslSocketFactory = sslContext
+                        .getSocketFactory();
+                ((javax.net.ssl.HttpsURLConnection) con)
+                        .setSSLSocketFactory(sslSocketFactory);
             } catch (Exception e) {
                 throw new IOException(e);
             }
@@ -84,7 +73,8 @@ public class NullAgent implements IAgent {
 
         final String setCookieFieldName = findSetCookieFieldName(con);
         if (setCookieFieldName != null) {
-            for (String newCookies : con.getHeaderFields().get(setCookieFieldName)) {
+            for (String newCookies : con.getHeaderFields().get(
+                    setCookieFieldName)) {
                 logger.debug("get new cookies: " + newCookies);
                 if (newCookies.length() != 0) {
                     // set-cookie = "Set-Cookie:" cookies
@@ -106,10 +96,15 @@ public class NullAgent implements IAgent {
                             // skip 'secure' and 'HttpOnly'
                             continue;
                         }
-                        final String name = pair.substring(0, pair.indexOf("=")).trim();
+                        final String name = pair
+                                .substring(0, pair.indexOf("=")).trim();
                         // skip them too
-                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path") || name.equalsIgnoreCase("max-age")
-                                || name.equalsIgnoreCase("comment") || name.equalsIgnoreCase("version")) {
+                        if (name.equalsIgnoreCase("expires")
+                                || name.equalsIgnoreCase("domain")
+                                || name.equalsIgnoreCase("path")
+                                || name.equalsIgnoreCase("max-age")
+                                || name.equalsIgnoreCase("comment")
+                                || name.equalsIgnoreCase("version")) {
                             continue;
                         }
                         String value = pair.substring(pair.indexOf("=") + 1);
@@ -122,7 +117,8 @@ public class NullAgent implements IAgent {
             con.disconnect();
             String dst = con.getHeaderField("Location");
             if (dst.startsWith("/")) {
-                final String port = url.getPort() == 80 ? "" : ":" + url.getPort();
+                final String port = url.getPort() == 80 ? "" : ":"
+                        + url.getPort();
                 dst = url.getProtocol() + "://" + url.getHost() + port + dst;
             }
             return go(new URL(dst));
@@ -132,8 +128,10 @@ public class NullAgent implements IAgent {
     }
 
     private void logHeader(HttpURLConnection con) {
-        for (Entry<String, List<String>> p : con.getRequestProperties().entrySet()) {
-            logger.debug("RequestProperties: " + p.getKey() + " -> " + p.getValue());
+        for (Entry<String, List<String>> p : con.getRequestProperties()
+                .entrySet()) {
+            logger.debug("RequestProperties: " + p.getKey() + " -> "
+                    + p.getValue());
         }
     }
 
@@ -144,7 +142,8 @@ public class NullAgent implements IAgent {
     }
 
     private void prepareHeader(HttpURLConnection con) {
-        con.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        con.addRequestProperty("Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
         if (charset != null) {
             con.addRequestProperty("Accept-Charset", charset + ",*;q=0.5");
         } else {
@@ -183,7 +182,8 @@ public class NullAgent implements IAgent {
     }
 
     @Override
-    public InputStream post(URL url, Map<String, String> params) throws IOException {
+    public InputStream post(URL url, Map<String, String> params)
+            throws IOException {
         logger.debug("go to " + url.toString());
 
         HttpURLConnection con;
@@ -195,9 +195,12 @@ public class NullAgent implements IAgent {
         if (url.getProtocol().equals("https")) {
             try {
                 SSLContext sslContext = SSLContext.getInstance("SSL");
-                sslContext.init(null, NullAgent.TRUST_ALL_CERTS, new java.security.SecureRandom());
-                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-                ((javax.net.ssl.HttpsURLConnection) con).setSSLSocketFactory(sslSocketFactory);
+                sslContext.init(null, NullAgent.TRUST_ALL_CERTS,
+                        new java.security.SecureRandom());
+                final SSLSocketFactory sslSocketFactory = sslContext
+                        .getSocketFactory();
+                ((javax.net.ssl.HttpsURLConnection) con)
+                        .setSSLSocketFactory(sslSocketFactory);
             } catch (Exception e) {
                 throw new IOException(e);
             }
@@ -234,7 +237,8 @@ public class NullAgent implements IAgent {
                 String pairs[] = newCookies.split(";");
                 if (pairs.length > 0) {
                     String name = pairs[0].substring(0, pairs[0].indexOf("="));
-                    String value = pairs[0].substring(pairs[0].indexOf("=") + 1);
+                    String value = pairs[0]
+                            .substring(pairs[0].indexOf("=") + 1);
                     addCookie(url.getHost(), name, value);
                 }
             }
@@ -305,4 +309,21 @@ public class NullAgent implements IAgent {
     public void removeHeader(String key) {
         requestParams.remove(key);
     }
+
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(final X509Certificate[] chain,
+                final String authType) {
+        }
+
+        @Override
+        public void checkServerTrusted(final X509Certificate[] chain,
+                final String authType) {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+    } };
 }
