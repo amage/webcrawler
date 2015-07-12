@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
@@ -15,6 +14,7 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.playstat.agent.ICaptchaSolver;
+import org.playstat.agent.Transaction;
 import org.playstat.agent.WebClientAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class WebClient {
 
     public InputStream post(String url, Map<String, String> params)
             throws IOException {
-        return web.getAgent().post(new URL(url), params);
+        return web.getAgent().post(Transaction.create(url, params));
     }
 
     public InputStream goRaw(String url) throws IOException {
@@ -64,8 +64,9 @@ public class WebClient {
     }
 
     public Document go(String url, String baseUrl) throws IOException {
+        Transaction t = Transaction.create(url);
         this.setBaseUrl(baseUrl);
-        final File pageFile = cache.getCacheFile(url);
+        final File pageFile = cache.getCacheFile(t.getUrl());
         if (cacheEnable) {
             if (pageFile.exists()) {
                 try {
@@ -75,13 +76,13 @@ public class WebClient {
                 }
             }
         }
-        final Document result = Jsoup.parse(getWebAgent().go(url),
+        final Document result = Jsoup.parse(getWebAgent().go(t.getUrl()),
                 getCharsetName(), baseUrl);
 
         if (getCaptchaSolver() != null) {
             if (getCaptchaSolver().isCaptchaPage(result)) {
                 getCaptchaSolver().solve(this, result);
-                return go(url, baseUrl);
+                return go(t.getUrl(), baseUrl);
             }
         }
         if (cacheEnable) {

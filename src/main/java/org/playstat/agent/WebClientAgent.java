@@ -2,7 +2,6 @@ package org.playstat.agent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import org.playstat.agent.nullagent.NullAgent;
 import org.slf4j.Logger;
@@ -17,7 +16,7 @@ public class WebClientAgent {
     }
 
     public InputStream go(String url) throws IOException {
-        return agent.go(new URL(url));
+        return agent.go(Transaction.create(url));
     }
 
     public IAgent getAgent() {
