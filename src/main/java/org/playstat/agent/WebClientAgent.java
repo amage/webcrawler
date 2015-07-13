@@ -19,6 +19,10 @@ public class WebClientAgent {
         return agent.go(Transaction.create(url));
     }
 
+    public InputStream go(Transaction t) throws IOException {
+        return agent.go(t);
+    }
+
     public IAgent getAgent() {
         return agent;
     }

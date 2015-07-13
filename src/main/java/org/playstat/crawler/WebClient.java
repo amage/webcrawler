@@ -118,12 +118,12 @@ public class WebClient {
         this.cacheEnable = cacheEnable;
     }
 
-    public void download(String url, String filename) throws IOException {
+    public void download(Transaction t, String filename) throws IOException {
         final File outFile = new File(filename);
         outFile.getParentFile().mkdirs();
 
-        logger.trace("downloading file: " + url);
-        ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(url));
+        logger.trace("downloading file: " + t.getUrl());
+        ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(t));
         FileOutputStream fos = new FileOutputStream(outFile);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
