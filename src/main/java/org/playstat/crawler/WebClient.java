@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.jsoup.Jsoup;
@@ -64,7 +65,8 @@ public class WebClient {
     }
 
     public Document go(String url, String baseUrl) throws IOException {
-        Transaction t = Transaction.create(url);
+        final Transaction t = Transaction.create(url);
+
         this.setBaseUrl(baseUrl);
         final File pageFile = cache.getCacheFile(t.getUrl());
         if (cacheEnable) {
@@ -118,8 +120,9 @@ public class WebClient {
         this.cacheEnable = cacheEnable;
     }
 
-    public void download(Transaction t, String filename) throws IOException {
-        final File outFile = new File(filename);
+    // TODO: version without outFileName
+    public void download(Transaction t, String outFileName) throws IOException {
+        final File outFile = new File(outFileName);
         outFile.getParentFile().mkdirs();
 
         logger.trace("downloading file: " + t.getUrl());
