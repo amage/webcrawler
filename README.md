@@ -15,6 +15,19 @@ $ ./gradlew
 ```
 
 ## Quick start
+Add webcrawler to project dependencies.
+gradle:
+```groovy
+repositories {
+    ...
+    maven { url "https://jitpack.io" }
+}
+dependencies {
+    ...
+    compile('com.github.amage:webcrawler:-SNAPSHOT')
+}
+```
+
 ```java
 WebClient web = new WebClient();
 Document doc = web.go("http://google.com");
