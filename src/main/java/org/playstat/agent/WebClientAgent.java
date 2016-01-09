@@ -17,6 +17,7 @@ public class WebClientAgent {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public WebClientAgent() {
+        logger.debug("Creating WebClientAgent with NullAgent");
         agent = new NullAgent();
     }
 
