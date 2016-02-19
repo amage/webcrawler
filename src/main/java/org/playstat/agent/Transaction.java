@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class Transaction {
     private String url;
+    private long initTime;
     private RequestMethod method;
     private final Map<String, String> requestParams = new HashMap<String, String>();
 
@@ -12,6 +13,7 @@ public class Transaction {
         final Transaction transaction = new Transaction();
         transaction.setUrl(url);
         transaction.setMethod(RequestMethod.GET);
+        transaction.setInitTime(System.currentTimeMillis());
         return transaction;
     }
     public static Transaction create(String url, Map<String, String> requestParams) {
@@ -38,5 +40,11 @@ public class Transaction {
 
     public Map<String, String> getRequestParams() {
         return requestParams;
+    }
+    public long getInitTime() {
+        return initTime;
+    }
+    public void setInitTime(long initTime) {
+        this.initTime = initTime;
     }
 }
