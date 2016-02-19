@@ -11,7 +11,7 @@ public class SpiderTest {
         // Init spider
         ISpider spider = new Spider();
         // Load initial transaction data and seeds (start urls)
-        spider.setInitialURLs("http://google.com", "https://www.facebook.com/");
+        spider.setInitialURLs("a.html");
         // Get transaction
         
         // If download is OK change it state NEW -> PROC
