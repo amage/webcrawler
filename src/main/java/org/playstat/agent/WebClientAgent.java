@@ -27,7 +27,7 @@ public class WebClientAgent {
 
     public InputStream go(Transaction t) throws IOException {
         if (history.size() > 0 && useReferer) {
-            t.getRequestParams().put("Referer", history.getFirst().getUrl());
+            t.addRequestParam("Referer", history.getFirst().getUrl());
         }
         putToHistory(t);
         return agent.go(t);

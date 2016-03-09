@@ -68,6 +68,12 @@ public class NullAgent implements IAgent {
         logHeader(con);
         logResponce(con);
 
+        for (Entry<String, List<String>> p : con.getHeaderFields().entrySet()) {
+            t.getResponseParams().putAll(con.getHeaderFields());
+            logger.debug("HeaderFields: " + p.getKey() + " -> " + p.getValue());
+        }
+
+
         final String setCookieFieldName = findSetCookieFieldName(con);
         if (setCookieFieldName != null) {
             for (String newCookies : con.getHeaderFields().get(setCookieFieldName)) {
@@ -149,8 +155,10 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
 
-        for (Entry<String, String> e : t.getRequestParams().entrySet()) {
-            con.addRequestProperty(e.getKey(), e.getValue());
+        for (Entry<String,List<String>> e : t.getRequestParams().entrySet()) {
+            for(String value: e.getValue()) {
+                con.addRequestProperty(e.getKey(), value);
+            }
         }
 
     }
@@ -201,13 +209,15 @@ public class NullAgent implements IAgent {
 
         final DataOutputStream out = new DataOutputStream(con.getOutputStream());
         final StringBuilder sb = new StringBuilder();
-        for (Entry<String, String> e : t.getRequestParams().entrySet()) {
-            if (sb.length() > 0) {
-                sb.append("&");
+        for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+            for(String value: e.getValue()) {
+                if (sb.length() > 0) {
+                    sb.append("&");
+                }
+                sb.append(e.getKey());
+                sb.append("=");
+                sb.append(URLEncoder.encode(value, "UTF-8"));
             }
-            sb.append(e.getKey());
-            sb.append("=");
-            sb.append(URLEncoder.encode(e.getValue(), "UTF-8"));
         }
         out.writeBytes(sb.toString());
         out.flush();
