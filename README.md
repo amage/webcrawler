@@ -1,5 +1,7 @@
 # Java web crawler micro-framework
 
+[![Join the chat at https://gitter.im/amage/webcrawler](https://badges.gitter.im/amage/webcrawler.svg)](https://gitter.im/amage/webcrawler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Features
 
 * cache
