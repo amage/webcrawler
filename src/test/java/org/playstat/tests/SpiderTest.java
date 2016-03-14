@@ -1,6 +1,5 @@
 package org.playstat.tests;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.playstat.spider.ISpider;
 import org.playstat.spider.Spider;
