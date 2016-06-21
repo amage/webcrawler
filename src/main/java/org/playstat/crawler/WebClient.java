@@ -14,6 +14,7 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.playstat.agent.ICaptchaSolver;
+import org.playstat.agent.RequestMethod;
 import org.playstat.agent.Transaction;
 import org.playstat.agent.WebClientAgent;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public class WebClient {
 
     public InputStream post(String url, Map<String, String> params)
             throws IOException {
-        return web.getAgent().post(Transaction.create(url, params));
+        return web.getAgent().post(Transaction.create(url, RequestMethod.POST, params, ""));
     }
 
     public InputStream goRaw(String url) throws IOException {

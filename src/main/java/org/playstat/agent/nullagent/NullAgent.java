@@ -17,6 +17,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.playstat.agent.HTTPResponse;
 import org.playstat.agent.IAgent;
 import org.playstat.agent.ICookiesStorage;
 import org.playstat.agent.Transaction;
@@ -32,6 +33,23 @@ public class NullAgent implements IAgent {
     private Proxy proxy;
     private String userAgent;
     private String charset;
+
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+            // no-op
+        }
+
+        @Override
+        public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
+            // no-op
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    } };
 
     public NullAgent() {
         setUserAgent(UserAgentFactory.generateString());
@@ -68,11 +86,9 @@ public class NullAgent implements IAgent {
         logHeader(con);
         logResponce(con);
 
-        for (Entry<String, List<String>> p : con.getHeaderFields().entrySet()) {
-            t.getResponseParams().putAll(con.getHeaderFields());
-            logger.debug("HeaderFields: " + p.getKey() + " -> " + p.getValue());
-        }
-
+        // TODO: Status and body
+        HTTPResponse response = new HTTPResponse("", con.getHeaderFields(), "");
+        t.setResponse(response);
 
         final String setCookieFieldName = findSetCookieFieldName(con);
         if (setCookieFieldName != null) {
@@ -100,8 +116,9 @@ public class NullAgent implements IAgent {
                         }
                         final String name = pair.substring(0, pair.indexOf("=")).trim();
                         // skip them too
-                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path") || name.equalsIgnoreCase("max-age")
-                                || name.equalsIgnoreCase("comment") || name.equalsIgnoreCase("version")) {
+                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path")
+                                || name.equalsIgnoreCase("max-age") || name.equalsIgnoreCase("comment")
+                                || name.equalsIgnoreCase("version")) {
                             continue;
                         }
                         String value = pair.substring(pair.indexOf("=") + 1);
@@ -135,6 +152,7 @@ public class NullAgent implements IAgent {
         }
     }
 
+    // TODO: move to request generator.
     private void prepareHeader(HttpURLConnection con, Transaction t) {
         con.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
         if (charset != null) {
@@ -155,8 +173,8 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
 
-        for (Entry<String,List<String>> e : t.getRequestParams().entrySet()) {
-            for(String value: e.getValue()) {
+        for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+            for (String value : e.getValue()) {
                 con.addRequestProperty(e.getKey(), value);
             }
         }
@@ -210,7 +228,7 @@ public class NullAgent implements IAgent {
         final DataOutputStream out = new DataOutputStream(con.getOutputStream());
         final StringBuilder sb = new StringBuilder();
         for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
-            for(String value: e.getValue()) {
+            for (String value : e.getValue()) {
                 if (sb.length() > 0) {
                     sb.append("&");
                 }
@@ -293,19 +311,4 @@ public class NullAgent implements IAgent {
     public void setCharset(String charset) {
         this.charset = charset;
     }
-
-    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
-        @Override
-        public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-    } };
 }
