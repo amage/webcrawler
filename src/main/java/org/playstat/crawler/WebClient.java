@@ -49,7 +49,7 @@ public class WebClient {
 
     public InputStream post(String url, Map<String, String> params)
             throws IOException {
-        return agent.post(Transaction.create(url, RequestMethod.POST, params, ""));
+        return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
     public InputStream goRaw(String url) throws IOException {
@@ -131,7 +131,7 @@ public class WebClient {
         outFile.getParentFile().mkdirs();
 
         logger.trace("downloading file: " + t.getUrl());
-        ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(t));
+        ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(t).getBody());
         FileOutputStream fos = new FileOutputStream(outFile);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
@@ -155,7 +155,7 @@ public class WebClient {
             t.addRequestParam("Referer", history.getFirst().getUrl());
         }
         putToHistory(t);
-        return agent.go(t);
+        return agent.go(t).getBody();
     }
 
     private void putToHistory(Transaction transaction) {

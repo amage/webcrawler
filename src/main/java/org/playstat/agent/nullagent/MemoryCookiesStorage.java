@@ -11,8 +11,9 @@ import org.slf4j.LoggerFactory;
 public class MemoryCookiesStorage implements ICookiesStorage {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, Map<String, String>> cookies = new HashMap<String, Map<String, String>>();
+    private final Map<String, Map<String, String>> cookies = new HashMap<>();
 
+    @Override
     public void addCookie(String host, String name, String value) {
         if (!cookies.containsKey(host)) {
             cookies.put(host, new HashMap<String, String>());
