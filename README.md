@@ -1,5 +1,7 @@
 # Java web crawler micro-framework
 
+``` WARNING!!! Don't use it in production. ```
+
 [![Gitter](https://badges.gitter.im/amage/webcrawler.svg)](https://gitter.im/amage/webcrawler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## Features
