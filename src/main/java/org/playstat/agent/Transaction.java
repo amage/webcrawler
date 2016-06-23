@@ -1,32 +1,57 @@
 package org.playstat.agent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Transaction {
-    private String url;
+    private final HTTPRequest request;
+    private HTTPResponse response = null;
+
     private long initTime;
-    private RequestMethod method;
-    private final Map<String,List<String>> requestParams = new HashMap<>();
-    private final Map<String,List<String>> responseParams = new HashMap<>();
+    private long responseSetTime;
+
+    public Transaction(HTTPRequest request) {
+        this.request = request;
+        initTime = System.currentTimeMillis();
+    }
 
     public void addRequestParam(String key, String value) {
+        final Map<String, List<String>> requestParams = request.getHeader();
         if(!requestParams.containsKey(key)) {
             requestParams.put(key, new ArrayList<>());
         }
         requestParams.get(key).add(value);
     }
+
+    public String getUrl() {
+        return request.getUrl();
+    }
+
+    public RequestMethod getMethod() {
+        return request.getMethod();
+    }
+
+    public Map<String,List<String>> getRequestParams() {
+        return request.getHeader();
+    }
+
+    public long getInitTime() {
+        return initTime;
+    }
+    public void setInitTime(long initTime) {
+        this.initTime = initTime;
+    }
+
     public static Transaction create(String url) {
-        final Transaction transaction = new Transaction();
-        transaction.setUrl(url);
-        transaction.setMethod(RequestMethod.GET);
+        final Transaction transaction = create(url, RequestMethod.GET, Collections.emptyMap(), "");
         transaction.setInitTime(System.currentTimeMillis());
         return transaction;
     }
-    public static Transaction create(String url, Map<String,String> requestParams) {
-        final Transaction transaction = create(url);
+
+    public static Transaction create(String url, RequestMethod method, Map<String,String> requestParams, String body) {
         final Map<String, List<String>> prep =  new HashMap<>();
         requestParams.entrySet().stream().forEach(e -> {
             if(!prep.containsKey(e.getKey())) {
@@ -34,35 +59,22 @@ public class Transaction {
             }
             prep.get(e.getKey()).add(e.getValue());
         });
-        return transaction;
+        return new Transaction(new HTTPRequest(method, url, prep, body));
     }
 
-    public String getUrl() {
-        return url;
+    public HTTPResponse getResponse() {
+        return response;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setResponse(HTTPResponse response) {
+        this.responseSetTime = System.currentTimeMillis();
+        this.response = response;
     }
 
-    public RequestMethod getMethod() {
-        return method;
+    public long getResponseSetTime() {
+        return responseSetTime;
     }
-
-    public void setMethod(RequestMethod method) {
-        this.method = method;
-    }
-
-    public Map<String,List<String>> getRequestParams() {
-        return requestParams;
-    }
-    public long getInitTime() {
-        return initTime;
-    }
-    public void setInitTime(long initTime) {
-        this.initTime = initTime;
-    }
-    public Map<String,List<String>> getResponseParams() {
-        return responseParams;
+    public HTTPRequest getRequest() {
+        return request;
     }
 }

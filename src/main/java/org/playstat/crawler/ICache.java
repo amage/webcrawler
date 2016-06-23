@@ -2,6 +2,8 @@ package org.playstat.crawler;
 
 import java.io.File;
 
+import org.playstat.agent.HTTPRequest;
+
 public interface ICache {
-    File getCacheFile(String url);
+    File getCacheFile(HTTPRequest request);
 }

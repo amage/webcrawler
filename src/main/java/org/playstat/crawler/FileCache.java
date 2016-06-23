@@ -4,13 +4,17 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.playstat.agent.HTTPRequest;
+
 public class FileCache implements ICache {
-    private final String CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser" + File.separator
+    private static final String CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser" + File.separator
             + "cache" + File.separator;
 
-    public File getCacheFile(String url) {
+    @Override
+    public File getCacheFile(HTTPRequest request) {
         try {
-            final String host = new URL(url).getHost();
+            String url = request.getUrl();
+			final String host = new URL(url).getHost();
             String filename = MD5(url);
             final File cacheFolder = prepareFS();
             final String subFolder = host + File.separator + filename.substring(0, 2) + File.separator + filename.substring(0, 4);
@@ -18,9 +22,8 @@ public class FileCache implements ICache {
 
             new File(cacheFolder.getAbsolutePath() + File.separator + subFolder).mkdirs();
 
-            final File pageFile = new File(cacheFolder.getAbsolutePath() + File.separator + filename);
+            return new File(cacheFolder.getAbsolutePath() + File.separator + filename);
 
-            return pageFile;
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -38,7 +41,7 @@ public class FileCache implements ICache {
         try {
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
             byte[] array = md.digest(md5.getBytes());
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.length; ++i) {
                 sb.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1, 3));
             }

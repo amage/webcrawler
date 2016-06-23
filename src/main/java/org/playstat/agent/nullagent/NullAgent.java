@@ -2,7 +2,6 @@ package org.playstat.agent.nullagent;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
@@ -17,8 +16,10 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.playstat.agent.HTTPResponse;
 import org.playstat.agent.IAgent;
 import org.playstat.agent.ICookiesStorage;
+import org.playstat.agent.RequestMethod;
 import org.playstat.agent.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,24 @@ public class NullAgent implements IAgent {
     private String language;
     private Proxy proxy;
     private String userAgent;
-    private String charset;
+    private String charset="UTF-8";
+
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+            // no-op
+        }
+
+        @Override
+        public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
+            // no-op
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    } };
 
     public NullAgent() {
         setUserAgent(UserAgentFactory.generateString());
@@ -40,7 +58,7 @@ public class NullAgent implements IAgent {
     }
 
     @Override
-    public InputStream go(Transaction t) throws IOException {
+    public HTTPResponse go(Transaction t) throws IOException {
         logger.debug("go to " + t.getUrl());
 
         final URL url = new URL(t.getUrl());
@@ -62,17 +80,34 @@ public class NullAgent implements IAgent {
             }
         }
         HttpURLConnection.setFollowRedirects(false);
-
+        if(t.getMethod().equals(RequestMethod.POST)) {
+            con.setRequestMethod("POST");
+            con.setDoOutput(true);
+            con.setDoInput(true);
+        }
         prepareHeader(con, t);
 
         logHeader(con);
+        
+        if (t.getMethod().equals(RequestMethod.POST)) {
+            final DataOutputStream out = new DataOutputStream(con.getOutputStream());
+            final StringBuilder sb = new StringBuilder();
+            for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+                for (String value : e.getValue()) {
+                    if (sb.length() > 0) {
+                        sb.append("&");
+                    }
+                    sb.append(e.getKey());
+                    sb.append("=");
+                    sb.append(URLEncoder.encode(value, charset));
+                }
+            }
+            out.writeBytes(sb.toString());
+            out.flush();
+        }
         logResponce(con);
 
-        for (Entry<String, List<String>> p : con.getHeaderFields().entrySet()) {
-            t.getResponseParams().putAll(con.getHeaderFields());
-            logger.debug("HeaderFields: " + p.getKey() + " -> " + p.getValue());
-        }
-
+        // TODO: Status and body
 
         final String setCookieFieldName = findSetCookieFieldName(con);
         if (setCookieFieldName != null) {
@@ -100,8 +135,9 @@ public class NullAgent implements IAgent {
                         }
                         final String name = pair.substring(0, pair.indexOf("=")).trim();
                         // skip them too
-                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path") || name.equalsIgnoreCase("max-age")
-                                || name.equalsIgnoreCase("comment") || name.equalsIgnoreCase("version")) {
+                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path")
+                                || name.equalsIgnoreCase("max-age") || name.equalsIgnoreCase("comment")
+                                || name.equalsIgnoreCase("version")) {
                             continue;
                         }
                         String value = pair.substring(pair.indexOf("=") + 1);
@@ -110,6 +146,8 @@ public class NullAgent implements IAgent {
                 }
             }
         }
+        HTTPResponse response = new HTTPResponse(con.getResponseCode(), con.getHeaderFields(), con.getInputStream());
+        t.setResponse(response);
         if (con.getResponseCode() / 100 == 3) {
             con.disconnect();
             String dst = con.getHeaderField("Location");
@@ -117,10 +155,11 @@ public class NullAgent implements IAgent {
                 final String port = url.getPort() == 80 ? "" : ":" + url.getPort();
                 dst = url.getProtocol() + "://" + url.getHost() + port + dst;
             }
+
             return go(Transaction.create(dst));
         }
         // TODO check gzip header;
-        return con.getInputStream();
+        return t.getResponse();
     }
 
     private void logHeader(HttpURLConnection con) {
@@ -135,6 +174,7 @@ public class NullAgent implements IAgent {
         }
     }
 
+    // TODO: move to request generator.
     private void prepareHeader(HttpURLConnection con, Transaction t) {
         con.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
         if (charset != null) {
@@ -155,8 +195,8 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
 
-        for (Entry<String,List<String>> e : t.getRequestParams().entrySet()) {
-            for(String value: e.getValue()) {
+        for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+            for (String value : e.getValue()) {
                 con.addRequestProperty(e.getKey(), value);
             }
         }
@@ -178,72 +218,6 @@ public class NullAgent implements IAgent {
     }
 
     @Override
-    public InputStream post(Transaction t) throws IOException {
-        logger.debug("go to " + t.getUrl());
-
-        final URL url = new URL(t.getUrl());
-        HttpURLConnection con;
-        if (proxy != null) {
-            con = (HttpURLConnection) url.openConnection(proxy);
-        } else {
-            con = (HttpURLConnection) url.openConnection();
-        }
-        if (url.getProtocol().equals("https")) {
-            try {
-                SSLContext sslContext = SSLContext.getInstance("SSL");
-                sslContext.init(null, NullAgent.TRUST_ALL_CERTS, new java.security.SecureRandom());
-                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-                ((javax.net.ssl.HttpsURLConnection) con).setSSLSocketFactory(sslSocketFactory);
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-
-        HttpURLConnection.setFollowRedirects(false);
-        con.setRequestMethod("POST");
-        con.setDoOutput(true);
-        con.setDoInput(true);
-
-        prepareHeader(con, t);
-        logHeader(con);
-
-        final DataOutputStream out = new DataOutputStream(con.getOutputStream());
-        final StringBuilder sb = new StringBuilder();
-        for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
-            for(String value: e.getValue()) {
-                if (sb.length() > 0) {
-                    sb.append("&");
-                }
-                sb.append(e.getKey());
-                sb.append("=");
-                sb.append(URLEncoder.encode(value, "UTF-8"));
-            }
-        }
-        out.writeBytes(sb.toString());
-        out.flush();
-
-        logResponce(con);
-
-        String newCookies = null;
-
-        if ((newCookies = con.getHeaderField("Set-cookie")) != null) {
-            logger.debug("get new cookies: " + newCookies);
-            if (newCookies.length() != 0) {
-                String pairs[] = newCookies.split(";");
-                if (pairs.length > 0) {
-                    String name = pairs[0].substring(0, pairs[0].indexOf("="));
-                    String value = pairs[0].substring(pairs[0].indexOf("=") + 1);
-                    addCookie(url.getHost(), name, value);
-                }
-            }
-        }
-        if (con.getResponseCode() / 100 == 3) {
-            con.disconnect();
-            return go(Transaction.create(con.getHeaderField("Location")));
-        }
-        return con.getInputStream();
-    }
-
     public void addCookie(String host, String name, String value) {
         cookiesStorage.addCookie(host, name, value);
     }
@@ -285,6 +259,7 @@ public class NullAgent implements IAgent {
         return proxy;
     }
 
+    @Override
     public void setProxy(Proxy proxy) {
         this.proxy = proxy;
     }
@@ -293,19 +268,4 @@ public class NullAgent implements IAgent {
     public void setCharset(String charset) {
         this.charset = charset;
     }
-
-    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
-        @Override
-        public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-    } };
 }
