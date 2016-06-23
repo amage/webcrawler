@@ -74,4 +74,7 @@ public class Transaction {
     public long getResponseSetTime() {
         return responseSetTime;
     }
+    public HTTPRequest getRequest() {
+        return request;
+    }
 }

@@ -4,14 +4,17 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.playstat.agent.HTTPRequest;
+
 public class FileCache implements ICache {
     private static final String CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser" + File.separator
             + "cache" + File.separator;
 
     @Override
-    public File getCacheFile(String url) {
+    public File getCacheFile(HTTPRequest request) {
         try {
-            final String host = new URL(url).getHost();
+            String url = request.getUrl();
+			final String host = new URL(url).getHost();
             String filename = MD5(url);
             final File cacheFolder = prepareFS();
             final String subFolder = host + File.separator + filename.substring(0, 2) + File.separator + filename.substring(0, 4);

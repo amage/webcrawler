@@ -1,14 +1,12 @@
 package org.playstat.crawler;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -52,28 +50,11 @@ public class WebClient {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
-    public InputStream goRaw(String url) throws IOException {
-        if (cacheEnable) {
-            File pageFile = cache.getCacheFile(url);
-            try {
-                if (pageFile.exists()) {
-                    return new FileInputStream(pageFile);
-                }
-            } catch (FileNotFoundException e) {
-                logger.error(e.getMessage(), e);
-            }
-            Files.copy(request(url), pageFile.toPath());
-            return new FileInputStream(pageFile);
-        } else {
-            return request(url);
-        }
-    }
-
     public Document go(String url, String baseUrl) throws IOException {
         final Transaction t = Transaction.create(url);
 
         this.setBaseUrl(baseUrl);
-        final File pageFile = cache.getCacheFile(t.getUrl());
+        final File pageFile = cache.getCacheFile(t.getRequest());
         if (cacheEnable) {
             if (pageFile.exists()) {
                 try {
