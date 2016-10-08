@@ -5,13 +5,21 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.LinkedList;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.LocaleUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 import org.playstat.agent.IAgent;
 import org.playstat.agent.ICaptchaSolver;
 import org.playstat.agent.RequestMethod;
@@ -40,6 +48,8 @@ public class WebClient {
     public WebClient(IAgent agent) {
         this.agent = agent;
     }
+
+
 
     public Document go(String url) throws IOException {
         return go(url, baseUrl);
