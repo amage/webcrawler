@@ -6,8 +6,8 @@
 
 ## Features
 
-* cache
-* cookie support in default agent
+* simple http client with cookie support
+* cache everything for tune parser without request to serever
 
 ## How to build
 
