@@ -64,8 +64,9 @@ public class WebClient {
         final Transaction t = Transaction.create(url);
 
         this.setBaseUrl(baseUrl);
-        final File pageFile = cache.getCacheFile(t.getRequest());
+        File pageFile = null;
         if (cacheEnable) {
+            pageFile = cache.getCacheFile(t.getRequest());
             if (pageFile.exists()) {
                 try {
                     return Jsoup.parse(pageFile, charsetName, baseUrl);
