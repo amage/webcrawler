@@ -2,7 +2,9 @@
 .project
 .gradle
 .settings
-*.iml
 .idea
+webcrawler.ipr
+webcrawler.iml
+webcrawler.iws
 bin
 build
