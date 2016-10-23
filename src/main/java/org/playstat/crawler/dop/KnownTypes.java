@@ -1,10 +1,5 @@
 package org.playstat.crawler.dop;
 
-import org.apache.commons.lang3.LocaleUtils;
-import org.jsoup.nodes.Element;
-import org.playstat.crawler.Page;
-import org.playstat.crawler.Selector;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -13,6 +8,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.LocaleUtils;
+import org.jsoup.nodes.Element;
+import org.playstat.crawler.Selector;
 
 public enum KnownTypes {
     STRING(String.class),

@@ -30,7 +30,7 @@ public class DOPWrapper {
     }
 
     public <T> T get(Class<T> pageClass, String... params) {
-        final String pageUrl = MessageFormat.format(pageClass.getAnnotation(Page.class).value(), params);
+        final String pageUrl = MessageFormat.format(pageClass.getAnnotation(Page.class).value(), (Object[]) params);
         try {
             return createDataObject(pageClass, web.go(pageUrl));
         } catch (Exception e) {

@@ -18,12 +18,19 @@ public class Transaction {
         initTime = System.currentTimeMillis();
     }
 
+    public boolean isComplete() {
+        return response != null;
+    }
     public void addRequestParam(String key, String value) {
+        if (isComplete()) {
+            throw new IllegalStateException("Transaction in complete");
+        }
         final Map<String, List<String>> requestParams = request.getHeader();
-        if(!requestParams.containsKey(key)) {
+        if (!requestParams.containsKey(key)) {
             requestParams.put(key, new ArrayList<>());
         }
         requestParams.get(key).add(value);
+        initTime = System.currentTimeMillis();
     }
 
     public String getUrl() {
@@ -34,13 +41,14 @@ public class Transaction {
         return request.getMethod();
     }
 
-    public Map<String,List<String>> getRequestParams() {
+    public Map<String, List<String>> getRequestParams() {
         return request.getHeader();
     }
 
     public long getInitTime() {
         return initTime;
     }
+
     public void setInitTime(long initTime) {
         this.initTime = initTime;
     }
@@ -51,10 +59,10 @@ public class Transaction {
         return transaction;
     }
 
-    public static Transaction create(String url, RequestMethod method, Map<String,String> requestParams, String body) {
-        final Map<String, List<String>> prep =  new HashMap<>();
+    public static Transaction create(String url, RequestMethod method, Map<String, String> requestParams, String body) {
+        final Map<String, List<String>> prep = new HashMap<>();
         requestParams.entrySet().stream().forEach(e -> {
-            if(!prep.containsKey(e.getKey())) {
+            if (!prep.containsKey(e.getKey())) {
                 prep.put(e.getKey(), new ArrayList<>());
             }
             prep.get(e.getKey()).add(e.getValue());
@@ -74,6 +82,7 @@ public class Transaction {
     public long getResponseSetTime() {
         return responseSetTime;
     }
+
     public HTTPRequest getRequest() {
         return request;
     }

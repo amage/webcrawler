@@ -5,21 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.LinkedList;
+import java.util.Map;
 
-import org.apache.commons.lang3.LocaleUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.select.Elements;
 import org.playstat.agent.IAgent;
 import org.playstat.agent.ICaptchaSolver;
 import org.playstat.agent.RequestMethod;
@@ -60,10 +52,12 @@ public class WebClient {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
-    public Document go(String url, String baseUrl) throws IOException {
-        final Transaction t = Transaction.create(url);
-
+    public Document go(Transaction t, String baseUrl) throws IOException {
         this.setBaseUrl(baseUrl);
+        if(t.isComplete()) {
+            return Jsoup.parse(t.getResponse().getBody(), getCharsetName(), getBaseUrl());
+        }
+
         File pageFile = null;
         if (cacheEnable) {
             pageFile = cache.getCacheFile(t.getRequest());
@@ -76,8 +70,9 @@ public class WebClient {
             }
         }
 
-        final Document result = Jsoup.parse(request(url), getCharsetName(), baseUrl);
+        final Document result = Jsoup.parse(request(t.getUrl()), getCharsetName(), baseUrl);
 
+        // TODO: move outside
         if (getCaptchaSolver() != null) {
             if (getCaptchaSolver().isCaptchaPage(result)) {
                 getCaptchaSolver().solve(this, result);
@@ -85,11 +80,15 @@ public class WebClient {
             }
         }
         if (cacheEnable) {
-            FileOutputStream out = new FileOutputStream(pageFile);
-            out.write(result.html().getBytes(charsetName));
-            out.close();
+            try(FileOutputStream out = new FileOutputStream(pageFile)){
+                out.write(result.html().getBytes(charsetName));
+            }
         }
         return result;
+
+    }
+    public Document go(String url, String baseUrl) throws IOException {
+        return go(Transaction.create(url), baseUrl);
     }
 
     public String getCharsetName() {
