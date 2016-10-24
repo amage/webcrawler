@@ -91,7 +91,6 @@ public class DOPWrapper {
             Object result = m.invoke(newInstance, element);
             targetField.setAccessible(true);
             targetField.set(newInstance, result);
-            System.out.println(result);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException
                 | SecurityException e) {
             // TODO Auto-generated catch block
