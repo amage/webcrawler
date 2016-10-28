@@ -52,6 +52,11 @@ public class WebClient {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
+    public InputStream post(String url, Map<String, String> params, String body)
+            throws IOException {
+        return agent.go(Transaction.create(url, RequestMethod.POST, params, body)).getBody();
+    }
+
     public Document go(Transaction t, String baseUrl) throws IOException {
         this.setBaseUrl(baseUrl);
         if(t.isComplete()) {

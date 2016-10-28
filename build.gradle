@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     /* parsing */
-    compile 'org.jsoup:jsoup:1.6.3'
+    compile 'org.jsoup:jsoup:1.10.1'
 
     /* logging */
     compile 'org.slf4j:slf4j-api:1.7.3'
