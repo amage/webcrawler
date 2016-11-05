@@ -17,6 +17,8 @@ import org.playstat.agent.ICaptchaSolver;
 import org.playstat.agent.RequestMethod;
 import org.playstat.agent.Transaction;
 import org.playstat.agent.nullagent.NullAgent;
+import org.playstat.crawler.cache.FileCache;
+import org.playstat.crawler.cache.ICache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +43,6 @@ public class WebClient {
         this.agent = agent;
     }
 
-
-
     public Document go(String url) throws IOException {
         return go(url, baseUrl);
     }
@@ -64,14 +64,11 @@ public class WebClient {
         }
 
         File pageFile = null;
-        if (cacheEnable) {
-            pageFile = cache.getCacheFile(t.getRequest());
-            if (pageFile.exists()) {
-                try {
-                    return Jsoup.parse(pageFile, charsetName, baseUrl);
-                } catch (FileNotFoundException e) {
-                    logger.error(e.getMessage(), e);
-                }
+        if (cacheEnable && cache.isChached(t.getRequest())) {
+            try {
+                return Jsoup.parse(pageFile, charsetName, baseUrl);
+            } catch (FileNotFoundException e) {
+                logger.error(e.getMessage(), e);
             }
         }
 

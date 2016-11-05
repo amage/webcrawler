@@ -1,12 +1,12 @@
-package org.playstat.crawler;
+package org.playstat.crawler.cache;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.playstat.agent.HTTPRequest;
+import org.playstat.crawler.cache.ICache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,24 +18,40 @@ public class FileCache implements ICache {
     public FileCache() {
         log.debug("Cache folder: " + CACHE_FOLDER);
     }
+
     @Override
     public File getCacheFile(HTTPRequest request) {
         try {
-            String url = request.getUrl();
-			final String host = new URL(url).getHost();
-            String filename = MD5(url);
-            final File cacheFolder = prepareFS();
-            final String subFolder = String.join(File.separator, host,
-                    filename.substring(0, 2), filename.substring(0, 4));
-            filename = subFolder + File.separator + filename;
+            final String path = getPath(request.getUrl());
+            final String subFolder = new File(path).getParent();
 
+            final File cacheFolder = prepareFS();
             new File(cacheFolder.getAbsolutePath() + File.separator + subFolder).mkdirs();
 
-            return new File(cacheFolder.getAbsolutePath() + File.separator + filename);
+            return new File(path);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean isChached(HTTPRequest request) {
+        try {
+            return new File(getPath(request.getUrl())).exists();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private static String getPath(String url) throws Exception {
+        final String filename = MD5(url);
+
+        final String subFolder = String.join(File.separator, new URL(url).getHost(),
+                filename.substring(0, 2), filename.substring(0, 4));
+
+        return subFolder + File.separator + filename;
     }
 
     private static File prepareFS() {
