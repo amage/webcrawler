@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.LocaleUtils;
 import org.jsoup.nodes.Element;
-import org.playstat.crawler.Selector;
 
 public enum KnownTypes {
     STRING(String.class),

@@ -1,4 +1,4 @@
-package org.playstat.crawler;
+package org.playstat.crawler.dop;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

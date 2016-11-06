@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.LocaleUtils;
 import org.jsoup.nodes.Element;
 
-import org.playstat.crawler.Selector;
-
 @SuppressWarnings("rawtypes")
 public class Instantiator {
 

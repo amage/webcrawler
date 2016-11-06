@@ -4,9 +4,9 @@ import java.net.MalformedURLException;
 
 import org.jsoup.nodes.Element;
 import org.junit.Test;
-import org.playstat.crawler.DOPWrapper;
-import org.playstat.crawler.Extractor;
-import org.playstat.crawler.Page;
+import org.playstat.crawler.dop.DOPWrapper;
+import org.playstat.crawler.dop.Extractor;
+import org.playstat.crawler.dop.Page;
 import org.playstat.crawler.WebClient;
 
 import junit.framework.Assert;
