@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-/**
+/*
  * Created by Iurii Shchekochikhin <amagex@gmail.com> on 14.03.16.
  */
 public class HTTPResponse {
