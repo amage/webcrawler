@@ -174,7 +174,7 @@ public class NullAgent implements IAgent {
         }
     }
 
-    // TODO: move to request generator.
+    // TODO: move to request generator and cleanup.
     private void prepareHeader(HttpURLConnection con, Transaction t) {
         con.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
         if (charset != null) {

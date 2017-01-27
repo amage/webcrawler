@@ -5,19 +5,23 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.playstat.agent.HTTPRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileCache implements ICache {
-    private static final String CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser" + File.separator
-            + "cache" + File.separator;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final String CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser"
+            + File.separator + "cache" + File.separator;
 
     @Override
     public File getCacheFile(HTTPRequest request) {
         try {
             String url = request.getUrl();
-			final String host = new URL(url).getHost();
+            final String host = new URL(url).getHost();
             String filename = MD5(url);
             final File cacheFolder = prepareFS();
-            final String subFolder = host + File.separator + filename.substring(0, 2) + File.separator + filename.substring(0, 4);
+            final String subFolder = host + File.separator + filename.substring(0, 2) + File.separator
+                    + filename.substring(0, 4);
             filename = subFolder + File.separator + filename;
 
             new File(cacheFolder.getAbsolutePath() + File.separator + subFolder).mkdirs();
@@ -47,8 +51,7 @@ public class FileCache implements ICache {
             }
             return sb.toString();
         } catch (java.security.NoSuchAlgorithmException e) {
-            // TODO logger
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return null;
     }
