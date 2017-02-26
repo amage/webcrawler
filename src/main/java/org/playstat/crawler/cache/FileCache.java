@@ -28,7 +28,7 @@ public class FileCache implements ICache {
             final File cacheFolder = prepareFS();
             new File(cacheFolder.getAbsolutePath() + File.separator + subFolder).mkdirs();
 
-            return new File(path);
+            return new File(cacheFolder.getAbsolutePath() + File.separator + path);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

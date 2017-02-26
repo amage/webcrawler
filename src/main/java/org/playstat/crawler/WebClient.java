@@ -47,23 +47,21 @@ public class WebClient {
         return go(url, baseUrl);
     }
 
-    public InputStream post(String url, Map<String, String> params)
-            throws IOException {
+    public InputStream post(String url, Map<String, String> params) throws IOException {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
-    public InputStream post(String url, Map<String, String> params, String body)
-            throws IOException {
+    public InputStream post(String url, Map<String, String> params, String body) throws IOException {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, body)).getBody();
     }
 
     public Document go(Transaction t, String baseUrl) throws IOException {
         this.setBaseUrl(baseUrl);
-        if(t.isComplete()) {
+        if (t.isComplete()) {
             return Jsoup.parse(t.getResponse().getBody(), getCharsetName(), getBaseUrl());
         }
 
-        File pageFile = null;
+        final File pageFile = cache.getCacheFile(t.getRequest());
         if (cacheEnable && cache.isChached(t.getRequest())) {
             try {
                 return Jsoup.parse(pageFile, charsetName, baseUrl);
@@ -82,13 +80,14 @@ public class WebClient {
             }
         }
         if (cacheEnable) {
-            try(FileOutputStream out = new FileOutputStream(pageFile)){
+            try (FileOutputStream out = new FileOutputStream(pageFile)) {
                 out.write(result.html().getBytes(charsetName));
             }
         }
         return result;
 
     }
+
     public Document go(String url, String baseUrl) throws IOException {
         return go(Transaction.create(url), baseUrl);
     }
