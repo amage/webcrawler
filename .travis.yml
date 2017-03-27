@@ -11,3 +11,4 @@ after_success:
 cache:
   directories:
   — $HOME/.gradle
+  - .gradle
