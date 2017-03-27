@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'eclipse'
     id 'idea'
+    id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.8.1'
 }
 
