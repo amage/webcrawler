@@ -10,5 +10,4 @@ after_success:
 
 cache:
   directories:
-  - .autoconf
-  - $HOME/.m2
+  — $HOME/.gradle
