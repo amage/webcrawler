@@ -1,5 +1,7 @@
 # Java web crawler micro-framework
 
+[![Build Status](https://travis-ci.org/amage/webcrawler.svg?branch=master)](https://travis-ci.org/amage/webcrawler)
+
 ``` WARNING!!! Don't use it in production. ```
 
 [![Gitter](https://badges.gitter.im/amage/webcrawler.svg)](https://gitter.im/amage/webcrawler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
