@@ -1,6 +1,14 @@
 language: java
+
 sudo: false
+
 jdk:
   - oraclejdk8
+
 after_success:
 - ./gradlew check jacocoTestReport coveralls
+
+cache:
+  directories:
+  - .autoconf
+  - $HOME/.m2
