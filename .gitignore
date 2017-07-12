@@ -3,6 +3,8 @@
 .gradle
 .settings
 *.iml
+*.ipr
+*.iws
 .idea
 bin
 build
