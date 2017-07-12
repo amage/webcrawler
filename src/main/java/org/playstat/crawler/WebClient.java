@@ -1,7 +1,6 @@
 package org.playstat.crawler;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,10 +21,10 @@ import org.slf4j.LoggerFactory;
 
 public class WebClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ICache cache = new FileCache();
+    private final ICache cache;
     private final IAgent agent;
-    private boolean useReferer = true;
-    private int historySize = 512;
+    private final boolean useReferer = true;
+    private final int historySize = 512;
     private final LinkedList<Transaction> history = new LinkedList<>();
 
     private String charsetName = "UTF-8";
@@ -34,11 +33,17 @@ public class WebClient {
     private boolean cacheEnable = true;
 
     public WebClient() {
-        this.agent = new NullAgent();
+        this(new FileCache());
     }
 
     public WebClient(IAgent agent) {
+        this.cache = new FileCache();
         this.agent = agent;
+    }
+
+    public WebClient(FileCache cache) {
+        this.agent = new NullAgent();
+        this.cache = cache;
     }
 
     public Document go(String url) throws IOException {
@@ -51,19 +56,14 @@ public class WebClient {
     }
 
     public Document go(String url, String baseUrl) throws IOException {
-        final Transaction t = Transaction.create(url);
-
         this.setBaseUrl(baseUrl);
-        final File pageFile = cache.getCacheFile(t.getRequest());
-        if (cacheEnable) {
-            if (pageFile.exists()) {
-                try {
-                    return Jsoup.parse(pageFile, charsetName, baseUrl);
-                } catch (FileNotFoundException e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
+
+        final Transaction t = Transaction.create(url);
+        if (cacheEnable && cache.isCahed(t.getRequest())) {
+            return Jsoup.parse(cache.getCacheFile(t.getRequest()), charsetName, baseUrl);
         }
+
+        final File pageFile = getCache().getCacheFile(t.getRequest());
 
         final Document result = Jsoup.parse(request(url), getCharsetName(), baseUrl);
 
@@ -74,7 +74,7 @@ public class WebClient {
             }
         }
         if (cacheEnable) {
-            FileOutputStream out = new FileOutputStream(pageFile);
+            final FileOutputStream out = new FileOutputStream(pageFile);
             out.write(result.html().getBytes(charsetName));
             out.close();
         }
@@ -112,8 +112,8 @@ public class WebClient {
         outFile.getParentFile().mkdirs();
 
         logger.trace("downloading file: " + t.getUrl());
-        ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(t).getBody());
-        FileOutputStream fos = new FileOutputStream(outFile);
+        final ReadableByteChannel rbc = Channels.newChannel(getWebAgent().go(t).getBody());
+        final FileOutputStream fos = new FileOutputStream(outFile);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
     }
@@ -131,7 +131,7 @@ public class WebClient {
     }
 
     private InputStream request(String url) throws IOException {
-        Transaction t = Transaction.create(url);
+        final Transaction t = Transaction.create(url);
         if (!history.isEmpty() && useReferer) {
             t.addRequestParam("Referer", history.getFirst().getUrl());
         }
@@ -144,5 +144,9 @@ public class WebClient {
             history.removeLast();
         }
         history.addFirst(transaction);
+    }
+
+    public ICache getCache() {
+        return cache;
     }
 }

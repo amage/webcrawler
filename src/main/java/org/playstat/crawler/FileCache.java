@@ -68,13 +68,17 @@ public class FileCache implements ICache {
 
     @Override
     public boolean isCahed(HTTPRequest request) {
-        // TODO Auto-generated method stub
-        return false;
+        return getCacheFile(request).exists();
     }
 
     @Override
     public Transaction get() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void cache(Transaction t) {
+        // TODO Auto-generated method stub
     }
 }
