@@ -26,11 +26,9 @@ public class WebClient {
     private final boolean useReferer = true;
     private final int historySize = 512;
     private final LinkedList<Transaction> history = new LinkedList<>();
-
-    private String charsetName = "UTF-8";
-    private String baseUrl = "";
     private ICaptchaSolver captchaSolver;
-    private boolean cacheEnable = true;
+
+    private final WebClientSettings settings = WebClientSettings.defs();
 
     public WebClient() {
         this(new FileCache());
@@ -47,7 +45,7 @@ public class WebClient {
     }
 
     public Document go(String url) throws IOException {
-        return go(url, baseUrl);
+        return go(url, settings.getBaseUrl());
     }
 
     public InputStream post(String url, Map<String, String> params)
@@ -59,13 +57,13 @@ public class WebClient {
         this.setBaseUrl(baseUrl);
 
         final Transaction t = Transaction.create(url);
-        if (cacheEnable && cache.isCahed(t.getRequest())) {
-            return Jsoup.parse(cache.getCacheFile(t.getRequest()), charsetName, baseUrl);
+        if (settings.isCacheEnable() && cache.isCahed(t.getRequest())) {
+            return Jsoup.parse(cache.getCacheFile(t.getRequest()), settings.getCharsetName(), baseUrl);
         }
 
         final File pageFile = getCache().getCacheFile(t.getRequest());
 
-        final Document result = Jsoup.parse(request(url), getCharsetName(), baseUrl);
+        final Document result = Jsoup.parse(request(url), settings.getCharsetName(), baseUrl);
 
         if (getCaptchaSolver() != null) {
             if (getCaptchaSolver().isCaptchaPage(result)) {
@@ -73,37 +71,29 @@ public class WebClient {
                 return go(t.getUrl(), baseUrl);
             }
         }
-        if (cacheEnable) {
+        if (settings.isCacheEnable()) {
             final FileOutputStream out = new FileOutputStream(pageFile);
-            out.write(result.html().getBytes(charsetName));
+            out.write(result.html().getBytes(settings.getCharsetName()));
             out.close();
         }
         return result;
     }
 
-    public String getCharsetName() {
-        return charsetName;
+    public WebClientSettings getSettings() {
+        return settings;
     }
 
     public void setCharsetName(String charsetName) {
-        this.charsetName = charsetName;
+        this.settings.setCharsetName(charsetName);
         agent.setCharset(charsetName);
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
     public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    public boolean isCacheEnable() {
-        return cacheEnable;
+        this.settings.setBaseUrl(baseUrl);
     }
 
     public void setCacheEnable(boolean cacheEnable) {
-        this.cacheEnable = cacheEnable;
+        this.settings.setCacheEnable(cacheEnable);
     }
 
     // TODO: version without outFileName
