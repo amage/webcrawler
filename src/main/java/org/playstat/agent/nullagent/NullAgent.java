@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class NullAgent implements IAgent {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private ICookiesStorage cookiesStorage;
+    private final ICookiesStorage cookiesStorage;
 
     private String language;
     private Proxy proxy;
@@ -51,6 +51,16 @@ public class NullAgent implements IAgent {
         }
     } };
 
+    private int timeout = 1000 * 60 * 5;;
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
     public NullAgent() {
         setUserAgent(UserAgentFactory.generateString());
         setLanguage("en,ru");
@@ -68,14 +78,15 @@ public class NullAgent implements IAgent {
         } else {
             con = (HttpURLConnection) url.openConnection();
         }
-        con.setConnectTimeout(1000 * 60 * 5);
+
+        con.setConnectTimeout(timeout);
         if (url.getProtocol().equals("https")) {
             try {
-                SSLContext sslContext = SSLContext.getInstance("SSL");
+                final SSLContext sslContext = SSLContext.getInstance("SSL");
                 sslContext.init(null, NullAgent.TRUST_ALL_CERTS, new java.security.SecureRandom());
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 ((javax.net.ssl.HttpsURLConnection) con).setSSLSocketFactory(sslSocketFactory);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new IOException(e);
             }
         }
@@ -88,12 +99,12 @@ public class NullAgent implements IAgent {
         prepareHeader(con, t);
 
         logHeader(con);
-        
+
         if (t.getMethod().equals(RequestMethod.POST)) {
             final DataOutputStream out = new DataOutputStream(con.getOutputStream());
             final StringBuilder sb = new StringBuilder();
-            for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
-                for (String value : e.getValue()) {
+            for (final Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+                for (final String value : e.getValue()) {
                     if (sb.length() > 0) {
                         sb.append("&");
                     }
@@ -111,7 +122,7 @@ public class NullAgent implements IAgent {
 
         final String setCookieFieldName = findSetCookieFieldName(con);
         if (setCookieFieldName != null) {
-            for (String newCookies : con.getHeaderFields().get(setCookieFieldName)) {
+            for (final String newCookies : con.getHeaderFields().get(setCookieFieldName)) {
                 logger.debug("get new cookies: " + newCookies);
                 if (newCookies.length() != 0) {
                     // set-cookie = "Set-Cookie:" cookies
@@ -127,7 +138,7 @@ public class NullAgent implements IAgent {
                     // | "Version" "=" 1*DIGIT
                     // TODO: full cookie support
                     final String pairs[] = newCookies.split(";");
-                    for (String pair : pairs) {
+                    for (final String pair : pairs) {
                         final int ePos = pair.indexOf("=");
                         if (ePos == -1) {
                             // skip 'secure' and 'HttpOnly'
@@ -140,13 +151,13 @@ public class NullAgent implements IAgent {
                                 || name.equalsIgnoreCase("version")) {
                             continue;
                         }
-                        String value = pair.substring(pair.indexOf("=") + 1);
+                        final String value = pair.substring(pair.indexOf("=") + 1);
                         addCookie(url.getHost(), name, value);
                     }
                 }
             }
         }
-        HTTPResponse response = new HTTPResponse(con.getResponseCode(), con.getHeaderFields(), con.getInputStream());
+        final HTTPResponse response = new HTTPResponse(con.getResponseCode(), con.getHeaderFields(), con.getInputStream());
         t.setResponse(response);
         if (con.getResponseCode() / 100 == 3) {
             con.disconnect();
@@ -163,13 +174,13 @@ public class NullAgent implements IAgent {
     }
 
     private void logHeader(HttpURLConnection con) {
-        for (Entry<String, List<String>> p : con.getRequestProperties().entrySet()) {
+        for (final Entry<String, List<String>> p : con.getRequestProperties().entrySet()) {
             logger.debug("RequestProperties: " + p.getKey() + " -> " + p.getValue());
         }
     }
 
     private void logResponce(HttpURLConnection con) {
-        for (Entry<String, List<String>> p : con.getHeaderFields().entrySet()) {
+        for (final Entry<String, List<String>> p : con.getHeaderFields().entrySet()) {
             logger.debug("HeaderFields: " + p.getKey() + " -> " + p.getValue());
         }
     }
@@ -187,7 +198,7 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Accept-Language", language + ";q=0.8");
         con.addRequestProperty("Cache-Control", "no-cache");
         con.addRequestProperty("Connection", "keep-alive");
-        String cookie = makeCookieString(con.getURL().getHost());
+        final String cookie = makeCookieString(con.getURL().getHost());
         if (cookie != null && cookie.length() > 0) {
             con.addRequestProperty("Cookie", cookie);
         }
@@ -195,8 +206,8 @@ public class NullAgent implements IAgent {
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
 
-        for (Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
-            for (String value : e.getValue()) {
+        for (final Entry<String, List<String>> e : t.getRequestParams().entrySet()) {
+            for (final String value : e.getValue()) {
                 con.addRequestProperty(e.getKey(), value);
             }
         }
@@ -204,9 +215,9 @@ public class NullAgent implements IAgent {
     }
 
     private String makeCookieString(String host) {
-        Map<String, String> cookiesForHost = cookiesStorage.get(host);
-        StringBuilder sb = new StringBuilder();
-        for (Entry<String, String> cookie : cookiesForHost.entrySet()) {
+        final Map<String, String> cookiesForHost = cookiesStorage.get(host);
+        final StringBuilder sb = new StringBuilder();
+        for (final Entry<String, String> cookie : cookiesForHost.entrySet()) {
             if (sb.length() > 0) {
                 sb.append(";");
             }
@@ -228,7 +239,7 @@ public class NullAgent implements IAgent {
     }
 
     private String findSetCookieFieldName(HttpURLConnection con) {
-        for (String headerName : con.getHeaderFields().keySet()) {
+        for (final String headerName : con.getHeaderFields().keySet()) {
             if (headerName == null) {
                 continue;
             }
