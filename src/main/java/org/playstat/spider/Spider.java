@@ -32,18 +32,18 @@ public class Spider {
                 final String url = queue.pollFirst();
                 final Document doc = web.go(url);
                 pageProcessor.process(url, doc);
+                visited.add(url);
+                System.out.println("visited: " + url);
                 doc.getElementsByTag("a").forEach(el -> {
                     final String href = el.attr("href");
                     if (href == null || href.isEmpty()) {
                         return;
                     }
                     final String nhref = naiveNormalize(url, href);
-                    if (!visited.contains(nhref) && scenario.isInteresting(nhref)) {
+                    if (!visited.contains(nhref) && !queue.contains(nhref) && scenario.isInteresting(nhref)) {
                         queue.add(nhref);
                     }
                 });
-                visited.add(url);
-                System.out.println("visited: " + url);
             } catch (final IOException e) {
                 log.error(e.getMessage(), e);
             }
@@ -51,6 +51,14 @@ public class Spider {
     }
 
     private String naiveNormalize(String pageUrl, String href) {
+        // FIXME: https://en.wikipedia.org/wiki/URL_normalization
+        // https://stackoverflow.com/questions/3365271/standard-url-normalization-java
+        // This is really required now
+        href = href.replace(" ", "%20");
+        if (href.startsWith("?")) {
+            href += "/" + href;
+        }
+
         if (href.startsWith("/")) {
             final String woProto = pageUrl.substring(pageUrl.indexOf(":") + 3);
             if (woProto.indexOf("/") > 0) {
