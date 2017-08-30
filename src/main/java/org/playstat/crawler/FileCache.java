@@ -1,13 +1,20 @@
 package org.playstat.crawler;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 import org.playstat.agent.HTTPRequest;
+import org.playstat.agent.HTTPResponse;
 import org.playstat.agent.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.io.Files;
 
 public class FileCache implements ICache {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -72,13 +79,25 @@ public class FileCache implements ICache {
     }
 
     @Override
-    public Transaction get() {
-        // TODO Auto-generated method stub
-        return null;
+    public Transaction get(HTTPRequest request) throws IOException {
+        if (!isCahed(request)) {
+            return null;
+        }
+        final Transaction result = new Transaction(request);
+        final File contentFile = getCacheFile(request);
+        final CacheMetaData meta = new CacheMetaData();
+        final Map<String, List<String>> header = meta.getHeader();
+        final int responseCode = meta.getResponseCode();
+        final HTTPResponse response = new HTTPResponse(responseCode, header,
+                new ByteArrayInputStream(Files.toByteArray(contentFile)));
+        result.setResponse(response);
+        return result;
     }
 
     @Override
     public void cache(Transaction t) {
+        t.getRequest();
+        t.getResponse();
         // TODO Auto-generated method stub
     }
 }

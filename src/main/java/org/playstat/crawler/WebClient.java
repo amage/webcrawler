@@ -72,9 +72,11 @@ public class WebClient {
             }
         }
         if (settings.isCacheEnable()) {
+            cache.cache(t);
             final FileOutputStream out = new FileOutputStream(pageFile);
             out.write(result.html().getBytes(settings.getCharsetName()));
             out.close();
+
         }
         return result;
     }
