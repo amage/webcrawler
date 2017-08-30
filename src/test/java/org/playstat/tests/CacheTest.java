@@ -3,6 +3,7 @@ package org.playstat.tests;
 import java.io.IOException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.playstat.agent.Transaction;
@@ -10,6 +11,7 @@ import org.playstat.crawler.ICache;
 
 public class CacheTest {
     @Test
+    @Ignore
     public void testGetHit() throws IOException {
         final ICache cache = Mockito.mock(ICache.class);
         final Transaction t = Transaction.create("http://ya.ru");
