@@ -14,8 +14,6 @@ import org.playstat.agent.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
-
 public class FileCache implements ICache {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private static final String DEFAULT_CACHE_FOLDER = System.getProperty("user.home") + File.separator + ".parser"
@@ -89,7 +87,7 @@ public class FileCache implements ICache {
         final Map<String, List<String>> header = meta.getHeader();
         final int responseCode = meta.getResponseCode();
         final HTTPResponse response = new HTTPResponse(responseCode, header,
-                new ByteArrayInputStream(Files.toByteArray(contentFile)));
+                new ByteArrayInputStream(java.nio.file.Files.readAllBytes(contentFile.toPath())));
         result.setResponse(response);
         return result;
     }
