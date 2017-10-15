@@ -25,7 +25,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.3'
     compile 'org.slf4j:log4j-over-slf4j:1.7.3'
     compile 'ch.qos.logback:logback-classic:1.1.2'
-    compile 'com.github.detro.ghostdriver:phantomjsdriver:1.1.0'
+//    compile 'com.github.detro.ghostdriver:phantomjsdriver:1.1.0'
 
     /* Test */
     testCompile 'junit:junit:4.8.2'
