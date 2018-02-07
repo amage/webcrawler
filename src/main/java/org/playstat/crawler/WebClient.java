@@ -27,8 +27,9 @@ public class WebClient {
     private final int historySize = 512;
     private final LinkedList<Transaction> history = new LinkedList<>();
     private ICaptchaSolver captchaSolver;
-
     private final WebClientSettings settings = WebClientSettings.defs();
+    private long delay = 0l;
+    private long lastRequest = 0l;
 
     public WebClient() {
         this(new FileCache());
@@ -48,12 +49,19 @@ public class WebClient {
         return go(url, settings.getBaseUrl());
     }
 
-    public InputStream post(String url, Map<String, String> params)
-            throws IOException {
+    public InputStream post(String url, Map<String, String> params) throws IOException {
         return agent.go(Transaction.create(url, RequestMethod.POST, params, "")).getBody();
     }
 
     public Document go(String url, String baseUrl) throws IOException {
+        long timeDelta = System.currentTimeMillis() - lastRequest;
+        if (timeDelta < getDelay()) {
+            try {
+                Thread.sleep(getDelay() - timeDelta);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
         this.setBaseUrl(baseUrl);
 
         final Transaction t = Transaction.create(url);
@@ -64,6 +72,7 @@ public class WebClient {
         final File pageFile = getCache().getCacheFile(t.getRequest());
 
         final Document result = Jsoup.parse(request(url), settings.getCharsetName(), baseUrl);
+        lastRequest = System.currentTimeMillis();
 
         if (getCaptchaSolver() != null) {
             if (getCaptchaSolver().isCaptchaPage(result)) {
@@ -140,5 +149,13 @@ public class WebClient {
 
     public ICache getCache() {
         return cache;
+    }
+
+    public long getDelay() {
+        return delay;
+    }
+
+    public void setDelay(long delay) {
+        this.delay = delay;
     }
 }
