@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.LinkedList;
 import java.util.Map;
 
 import org.jsoup.Jsoup;
@@ -23,9 +22,6 @@ public class WebClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ICache cache;
     private final IAgent agent;
-    private final boolean useReferer = true;
-    private final int historySize = 512;
-    private final LinkedList<Transaction> history = new LinkedList<>();
     private ICaptchaSolver captchaSolver;
     private final WebClientSettings settings = WebClientSettings.defs();
     private long delay = 0l;
@@ -71,7 +67,7 @@ public class WebClient {
 
         final File pageFile = getCache().getCacheFile(t.getRequest());
 
-        final Document result = Jsoup.parse(request(url), settings.getCharsetName(), baseUrl);
+        final Document result = Jsoup.parse(agent.go(t).getBody(), settings.getCharsetName(), baseUrl);
         lastRequest = System.currentTimeMillis();
 
         if (getCaptchaSolver() != null) {
@@ -131,22 +127,6 @@ public class WebClient {
         this.captchaSolver = captchaSolver;
     }
 
-    private InputStream request(String url) throws IOException {
-        final Transaction t = Transaction.create(url);
-        if (!history.isEmpty() && useReferer) {
-            t.addRequestParam("Referer", history.getFirst().getUrl());
-        }
-        putToHistory(t);
-        return agent.go(t).getBody();
-    }
-
-    private void putToHistory(Transaction transaction) {
-        if (history.size() > historySize) {
-            history.removeLast();
-        }
-        history.addFirst(transaction);
-    }
-
     public ICache getCache() {
         return cache;
     }
@@ -157,5 +137,12 @@ public class WebClient {
 
     public void setDelay(long delay) {
         this.delay = delay;
+    }
+
+    public Transaction getLastTransaction() {
+        if (agent.getHistory().isEmpty()) {
+            return null;
+        }
+        return agent.getHistory().getFirst();
     }
 }

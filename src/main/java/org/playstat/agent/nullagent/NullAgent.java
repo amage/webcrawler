@@ -7,6 +7,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +33,10 @@ public class NullAgent implements IAgent {
     private String language;
     private Proxy proxy;
     private String userAgent;
-    private String charset="UTF-8";
+    private String charset = "UTF-8";
+
+    private final int historySize = 512;
+    private final LinkedList<Transaction> history = new LinkedList<>();
 
     private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
         @Override
@@ -69,6 +73,11 @@ public class NullAgent implements IAgent {
 
     @Override
     public HTTPResponse go(Transaction t) throws IOException {
+        if (!history.isEmpty()) {
+            t.addRequestParam("Referer", history.getFirst().getUrl());
+        }
+        putToHistory(t);
+
         logger.debug("go to " + t.getUrl());
 
         final URL url = new URL(t.getUrl());
@@ -91,7 +100,7 @@ public class NullAgent implements IAgent {
             }
         }
         HttpURLConnection.setFollowRedirects(false);
-        if(t.getMethod().equals(RequestMethod.POST)) {
+        if (t.getMethod().equals(RequestMethod.POST)) {
             con.setRequestMethod("POST");
             con.setDoOutput(true);
             con.setDoInput(true);
@@ -146,9 +155,9 @@ public class NullAgent implements IAgent {
                         }
                         final String name = pair.substring(0, pair.indexOf("=")).trim();
                         // skip them too
-                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain") || name.equalsIgnoreCase("path")
-                                || name.equalsIgnoreCase("max-age") || name.equalsIgnoreCase("comment")
-                                || name.equalsIgnoreCase("version")) {
+                        if (name.equalsIgnoreCase("expires") || name.equalsIgnoreCase("domain")
+                                || name.equalsIgnoreCase("path") || name.equalsIgnoreCase("max-age")
+                                || name.equalsIgnoreCase("comment") || name.equalsIgnoreCase("version")) {
                             continue;
                         }
                         final String value = pair.substring(pair.indexOf("=") + 1);
@@ -157,7 +166,8 @@ public class NullAgent implements IAgent {
                 }
             }
         }
-        final HTTPResponse response = new HTTPResponse(con.getResponseCode(), con.getHeaderFields(), con.getInputStream());
+        final HTTPResponse response = new HTTPResponse(con.getResponseCode(), con.getHeaderFields(),
+                con.getInputStream());
         t.setResponse(response);
         if (con.getResponseCode() / 100 == 3) {
             con.disconnect();
@@ -166,7 +176,6 @@ public class NullAgent implements IAgent {
                 final String port = url.getPort() == 80 ? "" : ":" + url.getPort();
                 dst = url.getProtocol() + "://" + url.getHost() + port + dst;
             }
-
             return go(Transaction.create(dst));
         }
         // TODO check gzip header;
@@ -279,4 +288,16 @@ public class NullAgent implements IAgent {
     public void setCharset(String charset) {
         this.charset = charset;
     }
+
+    public LinkedList<Transaction> getHistory() {
+        return history;
+    }
+
+    private void putToHistory(Transaction transaction) {
+        if (history.size() > historySize) {
+            history.removeLast();
+        }
+        history.addFirst(transaction);
+    }
+
 }
