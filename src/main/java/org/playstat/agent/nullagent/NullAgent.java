@@ -38,7 +38,7 @@ public class NullAgent implements IAgent {
     private final int historySize = 512;
     private final LinkedList<Transaction> history = new LinkedList<>();
 
-    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{new X509TrustManager() {
         @Override
         public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
             // no-op
@@ -53,9 +53,9 @@ public class NullAgent implements IAgent {
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
-    } };
+    }};
 
-    private int timeout = 1000 * 60 * 5;;
+    private int timeout = 1000 * 60 * 5;
 
     public int getTimeout() {
         return timeout;
@@ -126,6 +126,7 @@ public class NullAgent implements IAgent {
             out.flush();
         }
         logResponce(con);
+        updateEncoding(con);
 
         // TODO: Status and body
 
@@ -180,6 +181,17 @@ public class NullAgent implements IAgent {
         }
         // TODO check gzip header;
         return t.getResponse();
+    }
+
+    private void updateEncoding(HttpURLConnection con) {
+        String content = con.getHeaderField("Content-Type");
+        String str = "charset=";
+        String newCharset = content.substring((content.indexOf(str) + str.length()));
+        int space = newCharset.indexOf(' ');
+        if (space > 0) {
+            newCharset = newCharset.substring(0, space);
+        }
+        setCharset(newCharset);
     }
 
     private void logHeader(HttpURLConnection con) {
