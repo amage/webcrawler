@@ -1,12 +1,15 @@
 package org.playstat.tests;
 
 import org.junit.Test;
+import org.playstat.crawler.WebClient;
 import org.playstat.spider.ISpider;
 import org.playstat.spider.Spider;
 
+import java.io.IOException;
+
 public class SpiderTest {
     @Test
-    public void runLoopTest() {
+    public void runLoopTest() throws IOException {
         // Init spider
         ISpider spider = new Spider();
         // Load initial transaction data and seeds (start urls)
@@ -17,5 +20,9 @@ public class SpiderTest {
         // Find all fits handlers and execute them
         // Change state PROC->COMPLETE
         // Goto 2 until unprocessed transaction exists
+        WebClient webClient = new WebClient();
+        webClient.setCacheEnable(false);
+        webClient.go("http://logosltd.ru/");
+
     }
 }

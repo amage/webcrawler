@@ -1,15 +1,15 @@
 package org.playstat.crawler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class WebClientSettings {
     private final static Logger log = LoggerFactory.getLogger(WebClientSettings.class);
-    private String charsetName = "UTF-8";
+    private String defaultCharsetName = "UTF-8";
     private String baseUrl = "";
     private boolean cacheEnable = true;
 
@@ -21,7 +21,7 @@ public class WebClientSettings {
         try (FileInputStream in = new FileInputStream(new File(path))) {
             p.load(in);
             final WebClientSettings result = new WebClientSettings();
-            result.setCharsetName(p.getProperty("charsetName"));
+            result.setDefaultCharsetName(p.getProperty("defaultCharsetName"));
             result.setBaseUrl(p.getProperty("baseUrl"));
             result.setCacheEnable(Boolean.parseBoolean(p.getProperty("cacheEnable")));
             return result;
@@ -30,12 +30,13 @@ public class WebClientSettings {
         }
         return null;
     }
-    public String getCharsetName() {
-        return charsetName;
+
+    public String getDefaultCharsetName() {
+        return defaultCharsetName;
     }
 
-    public void setCharsetName(String charsetName) {
-        this.charsetName = charsetName;
+    public void setDefaultCharsetName(String defaultCharsetName) {
+        this.defaultCharsetName = defaultCharsetName;
     }
 
     public String getBaseUrl() {
