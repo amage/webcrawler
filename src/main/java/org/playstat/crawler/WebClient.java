@@ -24,8 +24,8 @@ public class WebClient {
     private final IAgent agent;
     private ICaptchaSolver captchaSolver;
     private final WebClientSettings settings = WebClientSettings.defs();
-    private long delay = 0l;
-    private long lastRequest = 0l;
+    private long delay = 0L;
+    private long lastRequest = 0L;
 
     public WebClient() {
         this(new FileCache());
@@ -37,7 +37,7 @@ public class WebClient {
     }
 
     public WebClient(FileCache cache) {
-        this.agent = new NullAgent();
+        this.agent = new NullAgent(settings);
         this.cache = cache;
     }
 

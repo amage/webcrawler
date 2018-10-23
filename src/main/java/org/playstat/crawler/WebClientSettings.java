@@ -2,16 +2,18 @@ package org.playstat.crawler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Properties;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebClientSettings {
+
     private final static Logger log = LoggerFactory.getLogger(WebClientSettings.class);
     private String charsetName = "UTF-8";
     private String baseUrl = "";
     private boolean cacheEnable = true;
+    private List<String> languages = new ArrayList<>(Arrays.asList("ru", "en"));
 
     private WebClientSettings() {
     }
@@ -30,6 +32,7 @@ public class WebClientSettings {
         }
         return null;
     }
+
     public String getCharsetName() {
         return charsetName;
     }
@@ -52,6 +55,14 @@ public class WebClientSettings {
 
     public void setCacheEnable(boolean cacheEnable) {
         this.cacheEnable = cacheEnable;
+    }
+
+    public List<String> getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(List<String> languages) {
+        this.languages = languages;
     }
 
     public static WebClientSettings defs() {

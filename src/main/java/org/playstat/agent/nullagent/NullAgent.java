@@ -22,6 +22,7 @@ import org.playstat.agent.IAgent;
 import org.playstat.agent.ICookiesStorage;
 import org.playstat.agent.RequestMethod;
 import org.playstat.agent.Transaction;
+import org.playstat.crawler.WebClientSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,16 +30,17 @@ public class NullAgent implements IAgent {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ICookiesStorage cookiesStorage;
+    private WebClientSettings settings;
 
     private String language;
     private Proxy proxy;
     private String userAgent;
     private String charset = "UTF-8";
 
-    private final int historySize = 512;
+    private final static int HISTORY_SIZE = 512;
     private final LinkedList<Transaction> history = new LinkedList<>();
 
-    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new X509TrustManager() {
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{new X509TrustManager() {
         @Override
         public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
             // no-op
@@ -53,9 +55,9 @@ public class NullAgent implements IAgent {
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
-    } };
+    }};
 
-    private int timeout = 1000 * 60 * 5;;
+    private int timeout = 1000 * 60 * 5;
 
     public int getTimeout() {
         return timeout;
@@ -65,9 +67,9 @@ public class NullAgent implements IAgent {
         this.timeout = timeout;
     }
 
-    public NullAgent() {
+    public NullAgent(WebClientSettings settings) {
         setUserAgent(UserAgentFactory.generateString());
-        setLanguage("en,ru");
+        setLanguage(String.join(",", settings.getLanguages()));
         this.cookiesStorage = new MemoryCookiesStorage();
     }
 
@@ -204,14 +206,15 @@ public class NullAgent implements IAgent {
         }
         // con.addRequestProperty("Accept-Encoding", "gzip,deflate,sdch");
         // con.addRequestProperty("Accept-Encoding", "deflate");
-        con.addRequestProperty("Accept-Language", language + ";q=0.8");
+        con.addRequestProperty("Accept-Language", getLanguage() + ";q=0.8");
         con.addRequestProperty("Cache-Control", "no-cache");
         con.addRequestProperty("Connection", "keep-alive");
         final String cookie = makeCookieString(con.getURL().getHost());
-        if (cookie != null && cookie.length() > 0) {
+        if (!cookie.isEmpty()) {
             con.addRequestProperty("Cookie", cookie);
         }
-        con.addRequestProperty("Host", "www.yandex.ru");
+
+        // TODO con.addRequestProperty("Host", "www.yandex.ru");
         con.addRequestProperty("Pragma", "no-cache");
         con.addRequestProperty("User-Agent", getUserAgent());
 
@@ -294,7 +297,7 @@ public class NullAgent implements IAgent {
     }
 
     private void putToHistory(Transaction transaction) {
-        if (history.size() > historySize) {
+        if (history.size() > HISTORY_SIZE) {
             history.removeLast();
         }
         history.addFirst(transaction);
