@@ -1,22 +1,20 @@
 package org.playstat.crawler;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.playstat.agent.*;
+import org.playstat.agent.nullagent.NullAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.util.Map;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.playstat.agent.IAgent;
-import org.playstat.agent.ICaptchaSolver;
-import org.playstat.agent.RequestMethod;
-import org.playstat.agent.Transaction;
-import org.playstat.agent.nullagent.NullAgent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WebClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -62,12 +60,13 @@ public class WebClient {
 
         final Transaction t = Transaction.create(url);
         if (settings.isCacheEnable() && cache.isCahed(t.getRequest())) {
-            return Jsoup.parse(cache.getCacheFile(t.getRequest()), settings.getCharsetName(), baseUrl);
+            return Jsoup.parse(cache.getCacheFile(t.getRequest()), settings.getDefaultCharsetName(), baseUrl);
         }
 
         final File pageFile = getCache().getCacheFile(t.getRequest());
 
-        final Document result = Jsoup.parse(agent.go(t).getBody(), settings.getCharsetName(), baseUrl);
+        HTTPResponse response = agent.go(t);
+        final Document result = Jsoup.parse(response.getBody(), response.getCharset(Charset.forName(settings.getDefaultCharsetName())).name(), baseUrl);
         lastRequest = System.currentTimeMillis();
 
         if (getCaptchaSolver() != null) {
@@ -79,7 +78,7 @@ public class WebClient {
         if (settings.isCacheEnable()) {
             cache.cache(t);
             final FileOutputStream out = new FileOutputStream(pageFile);
-            out.write(result.html().getBytes(settings.getCharsetName()));
+            out.write(result.html().getBytes(settings.getDefaultCharsetName()));
             out.close();
 
         }
@@ -91,7 +90,7 @@ public class WebClient {
     }
 
     public void setCharsetName(String charsetName) {
-        this.settings.setCharsetName(charsetName);
+        this.settings.setDefaultCharsetName(charsetName);
         agent.setCharset(charsetName);
     }
 

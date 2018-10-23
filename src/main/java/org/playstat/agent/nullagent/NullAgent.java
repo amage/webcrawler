@@ -1,5 +1,12 @@
 package org.playstat.agent.nullagent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -12,21 +19,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 import org.playstat.agent.HTTPResponse;
 import org.playstat.agent.IAgent;
 import org.playstat.agent.ICookiesStorage;
 import org.playstat.agent.RequestMethod;
 import org.playstat.agent.Transaction;
 import org.playstat.crawler.WebClientSettings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NullAgent implements IAgent {
+    private final static int MAX_REDIRECTS = 32;
+    private int redirects = 0;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ICookiesStorage cookiesStorage;
@@ -74,6 +76,7 @@ public class NullAgent implements IAgent {
     }
 
     @Override
+    // TODO: threadsafe me!
     public HTTPResponse go(Transaction t) throws IOException {
         if (!history.isEmpty()) {
             t.addRequestParam("Referer", history.getFirst().getUrl());
@@ -91,7 +94,7 @@ public class NullAgent implements IAgent {
         }
 
         con.setConnectTimeout(timeout);
-        if (url.getProtocol().equals("https")) {
+        if ("https".equals(url.getProtocol())) {
             try {
                 final SSLContext sslContext = SSLContext.getInstance("SSL");
                 sslContext.init(null, NullAgent.TRUST_ALL_CERTS, new java.security.SecureRandom());
@@ -128,6 +131,7 @@ public class NullAgent implements IAgent {
             out.flush();
         }
         logResponce(con);
+        updateEncoding(con);
 
         // TODO: Status and body
 
@@ -178,10 +182,28 @@ public class NullAgent implements IAgent {
                 final String port = url.getPort() == 80 ? "" : ":" + url.getPort();
                 dst = url.getProtocol() + "://" + url.getHost() + port + dst;
             }
+            if (redirects < MAX_REDIRECTS) {
+                redirects++;
+            } else {
+                redirects = 0;
+                throw new IOException("Too many redirects");
+            }
             return go(Transaction.create(dst));
         }
+        redirects = 0;
         // TODO check gzip header;
         return t.getResponse();
+    }
+
+    private void updateEncoding(HttpURLConnection con) {
+        String content = con.getHeaderField("Content-Type");
+        String str = "charset=";
+        String newCharset = content.substring((content.indexOf(str) + str.length()));
+        int space = newCharset.indexOf(' ');
+        if (space > 0) {
+            newCharset = newCharset.substring(0, space);
+        }
+        setCharset(newCharset);
     }
 
     private void logHeader(HttpURLConnection con) {
