@@ -2,6 +2,7 @@ package org.playstat.agent;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,21 @@ public class HTTPResponse {
         if (space > 0) {
             newCharset = newCharset.substring(0, space);
         }
-        return Charset.forName(newCharset);
+        return Charset.forName(fix(newCharset));
+    }
+
+    private static Map<String, String> cpFixes = new HashMap<>();
+
+    static {
+        cpFixes.put("cp1251", "Windows-1251");
+        cpFixes.put("windows-1251", "Windows-1251");
+    }
+
+    private static String fix(String newCharset) {
+        if (cpFixes.containsKey(newCharset)) {
+            return cpFixes.get(newCharset);
+        }
+        return newCharset;
     }
 
     @Override
