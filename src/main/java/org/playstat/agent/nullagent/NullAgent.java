@@ -197,6 +197,9 @@ public class NullAgent implements IAgent {
 
     private void updateEncoding(HttpURLConnection con) {
         String content = con.getHeaderField("Content-Type");
+        if(content == null) {
+            return;
+        }
         String str = "charset=";
         String newCharset = content.substring((content.indexOf(str) + str.length()));
         int space = newCharset.indexOf(' ');
