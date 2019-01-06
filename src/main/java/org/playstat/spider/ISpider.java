@@ -4,4 +4,5 @@ public interface ISpider {
 
     void setInitialURLs(String ...urls);
 
+    void start();
 }

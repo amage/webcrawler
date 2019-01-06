@@ -53,11 +53,11 @@ public class Transaction {
 
     public static Transaction create(String url, RequestMethod method, Map<String,String> requestParams, String body) {
         final Map<String, List<String>> prep =  new HashMap<>();
-        requestParams.entrySet().stream().forEach(e -> {
-            if(!prep.containsKey(e.getKey())) {
-                prep.put(e.getKey(), new ArrayList<>());
+        requestParams.forEach((key, value) -> {
+            if (!prep.containsKey(key)) {
+                prep.put(key, new ArrayList<>());
             }
-            prep.get(e.getKey()).add(e.getValue());
+            prep.get(key).add(value);
         });
         return new Transaction(new HTTPRequest(method, url, prep, body));
     }
