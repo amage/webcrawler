@@ -7,4 +7,5 @@
 *.iws
 .idea
 bin
+out
 build

@@ -2,12 +2,15 @@ package org.playstat.spider;
 
 import org.jsoup.nodes.Document;
 import org.playstat.crawler.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SingleThreadSpider implements ISpider {
+    private final Logger log = LoggerFactory.getLogger(SingleThreadSpider.class);
     private final Queue<String> urls = new LinkedList<>();
     private final IUrlExtractor urlExtractor;
     private final IPageProcessor pageProcessor;
@@ -32,15 +35,13 @@ public class SingleThreadSpider implements ISpider {
         }
     }
 
-    protected Collection<String> process(String url) {
+    private Collection<String> process(String url) {
         try {
             final Document page = web.go(url);
             pageProcessor.processPage(page, url);
-            Collection<String> urls = urlExtractor.extract(page);
-            return urls;
+            return urlExtractor.extract(page);
         } catch (IOException e) {
-            // TODO logging
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return Collections.emptyList();
     }
